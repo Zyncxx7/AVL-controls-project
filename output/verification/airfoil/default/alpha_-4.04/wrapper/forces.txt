@@ -1,0 +1,31 @@
+ ---------------------------------------------------------------
+ Vortex Lattice Output -- Total Forces
+
+ Configuration: NACA 0012 rectangular test wing AR 1000                     
+     # Surfaces =   2
+     # Strips   =  96
+     # Vortices = 768
+
+  Sref =  1000.0       Cref =  1.0000       Bref =  1000.0    
+  Xref = 0.25000       Yref =  0.0000       Zref =  0.0000    
+
+ Standard axis orientation,  X fwd, Z down         
+
+ Run case:  -unnamed-                              
+
+  Alpha =  -4.04000     pb/2V =  -0.00000     p'b/2V =  -0.00000
+  Beta  =   0.00000     qc/2V =   0.00000
+  Mach  =     0.150     rb/2V =  -0.00000     r'b/2V =  -0.00000
+
+  CXtot =   0.03127     Cltot =   0.00000     Cl'tot =   0.00000
+  CYtot =   0.00000     Cmtot =  -0.00002
+  CZtot =   0.44447     Cntot =  -0.00000     Cn'tot =   0.00000
+
+  CLtot =  -0.44557
+  CDtot =   0.00012
+  CDvis =   0.00000     CDind = 0.0001182
+  CLff  =  -0.44558     CDff  = 0.0001184    | Trefftz
+  CYff  =   0.00000         e =    0.5336    | Plane  
+
+
+ ---------------------------------------------------------------

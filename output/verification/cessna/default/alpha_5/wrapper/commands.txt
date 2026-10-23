@@ -1,0 +1,15 @@
+PLOP
+G
+
+MASS cessna.mass
+MSET 1
+OPER
+A A 5
+B B 0
+X
+FT
+case_r754_uf2/forces.txt
+ST
+case_r754_uf2/derivatives.txt
+
+QUIT

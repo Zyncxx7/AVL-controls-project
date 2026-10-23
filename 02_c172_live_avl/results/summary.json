@@ -1,0 +1,13 @@
+{
+  "case_count": 51,
+  "largest_original_point_error": 0.0,
+  "original_points_pass": true,
+  "maximum_interpolation_errors": {
+    "CL": 0.001535000000000064,
+    "CD": 0.002145,
+    "Cm": 0.004415000000000002,
+    "CL_alpha": 0.010633000000000337,
+    "Cm_alpha": 0.004106500000000013,
+    "Cm_q": 0.011808999999999514
+  }
+}

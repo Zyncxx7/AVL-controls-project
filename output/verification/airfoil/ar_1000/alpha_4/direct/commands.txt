@@ -1,0 +1,16 @@
+PLOP
+G
+
+LOAD airfoil.avl
+MASS airfoil.mass
+MSET 1
+OPER
+A A 4
+B B 0
+X
+FT
+../../../output/verification/airfoil/ar_1000/alpha_4/direct/forces.txt
+ST
+../../../output/verification/airfoil/ar_1000/alpha_4/direct/derivatives.txt
+
+QUIT

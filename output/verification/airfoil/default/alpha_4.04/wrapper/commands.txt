@@ -1,0 +1,15 @@
+PLOP
+G
+
+MASS airfoil.mass
+MSET 1
+OPER
+A A 4.04
+B B 0
+X
+FT
+case_nfxky952/forces.txt
+ST
+case_nfxky952/derivatives.txt
+
+QUIT

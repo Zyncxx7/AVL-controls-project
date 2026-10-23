@@ -1,0 +1,16 @@
+PLOP
+G
+
+LOAD cessna.avl
+MASS cessna.mass
+MSET 1
+OPER
+A A 5
+B B 0
+X
+FT
+../../output/verification/cessna/default/alpha_5/direct/forces.txt
+ST
+../../output/verification/cessna/default/alpha_5/direct/derivatives.txt
+
+QUIT

@@ -1,0 +1,8 @@
+# C172 teaching-model mass properties, SI units
+Lunit = 1.0 m
+Munit = 1.0 kg
+Tunit = 1.0 s
+g = 9.81
+rho = 1.225
+# mass x y z Ixx Iyy Izz Ixy Ixz Iyz
+1043.0 2.22 0.0 -0.99 1285.0 1825.0 2667.0 0 0 0

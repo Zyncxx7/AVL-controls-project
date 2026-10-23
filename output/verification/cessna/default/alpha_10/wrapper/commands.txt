@@ -1,0 +1,15 @@
+PLOP
+G
+
+MASS cessna.mass
+MSET 1
+OPER
+A A 10
+B B 0
+X
+FT
+case_a9x90vdy/forces.txt
+ST
+case_a9x90vdy/derivatives.txt
+
+QUIT

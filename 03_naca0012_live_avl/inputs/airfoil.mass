@@ -1,0 +1,8 @@
+# Illustrative test-wing mass, not measured airfoil properties
+Lunit = 1.0 m
+Munit = 1.0 kg
+Tunit = 1.0 s
+g = 9.81
+rho = 1.225
+# mass x y z Ixx Iyy Izz Ixy Ixz Iyz
+1.0 0.25 0 0 83333.33333333333 0.08333333333333333 83333.41666666666 0 0 0

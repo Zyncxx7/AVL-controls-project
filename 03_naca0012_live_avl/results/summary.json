@@ -1,0 +1,13 @@
+{
+  "CL_RMSE": 0.019408753179944387,
+  "experimental_slope_per_degree": 0.10736269738240173,
+  "AVL_slope_per_degree": 0.1100051902748377,
+  "slope_difference_percent": 2.4612765484309795,
+  "checks": {
+    "zero_lift_at_zero_alpha": true,
+    "zero_moment_at_zero_alpha": true,
+    "near_2D_quarter_chord_moment_small": true,
+    "near_2D_slope_within_2_percent_of_theory": true
+  },
+  "all_checks_passed": true
+}

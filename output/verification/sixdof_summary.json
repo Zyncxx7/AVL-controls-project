@@ -1,0 +1,26 @@
+{
+  "DATCOM": {
+    "stability_check_passed": true,
+    "all_states_finite": true,
+    "samples": 1501,
+    "metrics": {
+      "max_speed_deviation_kt": 2.266758587568603,
+      "max_attitude_deviation_deg": 2.4915871675767094,
+      "final_speed_deviation_kt": 0.03820387906932865,
+      "final_pitch_deviation_deg": 0.16542398981162384,
+      "final_rate_deg_s": 0.006171875556182006
+    }
+  },
+  "AVL": {
+    "stability_check_passed": true,
+    "all_states_finite": true,
+    "samples": 1501,
+    "metrics": {
+      "max_speed_deviation_kt": 3.1453485415009936,
+      "max_attitude_deviation_deg": 3.566042983824377,
+      "final_speed_deviation_kt": 0.08489475548283565,
+      "final_pitch_deviation_deg": 0.15664327378711346,
+      "final_rate_deg_s": 0.01183471869592877
+    }
+  }
+}

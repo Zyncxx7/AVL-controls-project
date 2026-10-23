@@ -1,0 +1,15 @@
+PLOP
+G
+
+MASS cessna.mass
+MSET 1
+OPER
+A A -2.5
+B B 0
+X
+FT
+case_w6s4y93w/forces.txt
+ST
+case_w6s4y93w/derivatives.txt
+
+QUIT

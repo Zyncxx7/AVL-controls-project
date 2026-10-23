@@ -1,0 +1,461 @@
+{
+  "case_count": 11,
+  "all_passed": true,
+  "inputs_unchanged": true,
+  "input_sha256": {
+    "02_c172_live_avl\\inputs\\cessna.avl": "fea1e8faca1289a5dd007e93d71688aa1e7055f5d7d9f457d244013acbc0bee6",
+    "03_naca0012_live_avl\\inputs\\airfoil.avl": "25df932a2f599ecc30df2a50c21479a5497f4980659cc3934fdcace2ce04bd80",
+    "03_naca0012_live_avl\\inputs\\ar_10\\airfoil.avl": "2ddc1b693cc02aab5556b9767e03b406960fe53ef72ba2f389b6c58dce31b368",
+    "03_naca0012_live_avl\\inputs\\ar_100\\airfoil.avl": "eb2cae92b43cae0c34abb83d183d345a1c1b93ec0463b24acd10f42ecf6ce278",
+    "03_naca0012_live_avl\\inputs\\ar_1000\\airfoil.avl": "25df932a2f599ecc30df2a50c21479a5497f4980659cc3934fdcace2ce04bd80",
+    "02_c172_live_avl\\inputs\\cessna.mass": "55bd2a59deaf4e33a19bda50643db5d3f690af61aa5cf12c4a0bc7f93d59e38e",
+    "03_naca0012_live_avl\\inputs\\airfoil.mass": "26983d01d546818d1014d26f3d47113fa716a1dff39051cee31268022226521f",
+    "03_naca0012_live_avl\\inputs\\ar_10\\airfoil.mass": "2bf295f05eff33b4ae5d7363cdea147229d0d452eaabc4c1054a537eb8004496",
+    "03_naca0012_live_avl\\inputs\\ar_100\\airfoil.mass": "cf346c53118e3933c439f792759df75b83db04e7e24a676d4635a86ded1c0764",
+    "03_naca0012_live_avl\\inputs\\ar_1000\\airfoil.mass": "26983d01d546818d1014d26f3d47113fa716a1dff39051cee31268022226521f"
+  },
+  "maximum_absolute_difference": 0.0,
+  "scope": "Same bundled AVL executable; wrapper versus explicit console LOAD/MASS commands. No aerodynamic accuracy claim.",
+  "cases": [
+    {
+      "model": "cessna",
+      "variant": "default",
+      "alpha_deg": -2.5,
+      "wrapper": {
+        "alpha_deg": -2.5,
+        "CL": -0.07165,
+        "CD": 0.0007,
+        "Cm": 0.05001,
+        "CD_induced": 0.0007016,
+        "CL_alpha": 4.385781,
+        "Cm_alpha": -1.439476,
+        "Cm_q": -12.562618
+      },
+      "direct": {
+        "alpha_deg": -2.5,
+        "CL": -0.07165,
+        "CD": 0.0007,
+        "Cm": 0.05001,
+        "CD_induced": 0.0007016,
+        "CL_alpha": 4.385781,
+        "Cm_alpha": -1.439476,
+        "Cm_q": -12.562618
+      },
+      "absolute_differences": {
+        "alpha_deg": 0.0,
+        "CL": 0.0,
+        "CD": 0.0,
+        "Cm": 0.0,
+        "CD_induced": 0.0,
+        "CL_alpha": 0.0,
+        "Cm_alpha": 0.0,
+        "Cm_q": 0.0
+      },
+      "raw_report_numbers_match": {
+        "forces.txt": true,
+        "derivatives.txt": true
+      },
+      "passed": true
+    },
+    {
+      "model": "cessna",
+      "variant": "default",
+      "alpha_deg": 0,
+      "wrapper": {
+        "alpha_deg": 0.0,
+        "CL": 0.11987,
+        "CD": 0.00101,
+        "Cm": -0.00901,
+        "CD_induced": 0.001012,
+        "CL_alpha": 4.389099,
+        "Cm_alpha": -1.264071,
+        "Cm_q": -12.496427
+      },
+      "direct": {
+        "alpha_deg": 0.0,
+        "CL": 0.11987,
+        "CD": 0.00101,
+        "Cm": -0.00901,
+        "CD_induced": 0.001012,
+        "CL_alpha": 4.389099,
+        "Cm_alpha": -1.264071,
+        "Cm_q": -12.496427
+      },
+      "absolute_differences": {
+        "alpha_deg": 0.0,
+        "CL": 0.0,
+        "CD": 0.0,
+        "Cm": 0.0,
+        "CD_induced": 0.0,
+        "CL_alpha": 0.0,
+        "Cm_alpha": 0.0,
+        "Cm_q": 0.0
+      },
+      "raw_report_numbers_match": {
+        "forces.txt": true,
+        "derivatives.txt": true
+      },
+      "passed": true
+    },
+    {
+      "model": "cessna",
+      "variant": "default",
+      "alpha_deg": 5,
+      "wrapper": {
+        "alpha_deg": 5.0,
+        "CL": 0.501,
+        "CD": 0.01466,
+        "Cm": -0.10306,
+        "CD_induced": 0.0146629,
+        "CL_alpha": 4.331571,
+        "Cm_alpha": -0.885808,
+        "Cm_q": -12.292855
+      },
+      "direct": {
+        "alpha_deg": 5.0,
+        "CL": 0.501,
+        "CD": 0.01466,
+        "Cm": -0.10306,
+        "CD_induced": 0.0146629,
+        "CL_alpha": 4.331571,
+        "Cm_alpha": -0.885808,
+        "Cm_q": -12.292855
+      },
+      "absolute_differences": {
+        "alpha_deg": 0.0,
+        "CL": 0.0,
+        "CD": 0.0,
+        "Cm": 0.0,
+        "CD_induced": 0.0,
+        "CL_alpha": 0.0,
+        "Cm_alpha": 0.0,
+        "Cm_q": 0.0
+      },
+      "raw_report_numbers_match": {
+        "forces.txt": true,
+        "derivatives.txt": true
+      },
+      "passed": true
+    },
+    {
+      "model": "cessna",
+      "variant": "default",
+      "alpha_deg": 10,
+      "wrapper": {
+        "alpha_deg": 10.0,
+        "CL": 0.87345,
+        "CD": 0.04489,
+        "Cm": -0.16283,
+        "CD_induced": 0.0448884,
+        "CL_alpha": 4.191019,
+        "Cm_alpha": -0.48063,
+        "Cm_q": -11.995727
+      },
+      "direct": {
+        "alpha_deg": 10.0,
+        "CL": 0.87345,
+        "CD": 0.04489,
+        "Cm": -0.16283,
+        "CD_induced": 0.0448884,
+        "CL_alpha": 4.191019,
+        "Cm_alpha": -0.48063,
+        "Cm_q": -11.995727
+      },
+      "absolute_differences": {
+        "alpha_deg": 0.0,
+        "CL": 0.0,
+        "CD": 0.0,
+        "Cm": 0.0,
+        "CD_induced": 0.0,
+        "CL_alpha": 0.0,
+        "Cm_alpha": 0.0,
+        "Cm_q": 0.0
+      },
+      "raw_report_numbers_match": {
+        "forces.txt": true,
+        "derivatives.txt": true
+      },
+      "passed": true
+    },
+    {
+      "model": "airfoil",
+      "variant": "default",
+      "alpha_deg": -4.04,
+      "wrapper": {
+        "alpha_deg": -4.04,
+        "CL": -0.44557,
+        "CD": 0.00012,
+        "Cm": -2e-05,
+        "CD_induced": 0.0001182,
+        "CL_alpha": 6.308407,
+        "Cm_alpha": 0.000333,
+        "Cm_q": -0.791882
+      },
+      "direct": {
+        "alpha_deg": -4.04,
+        "CL": -0.44557,
+        "CD": 0.00012,
+        "Cm": -2e-05,
+        "CD_induced": 0.0001182,
+        "CL_alpha": 6.308407,
+        "Cm_alpha": 0.000333,
+        "Cm_q": -0.791882
+      },
+      "absolute_differences": {
+        "alpha_deg": 0.0,
+        "CL": 0.0,
+        "CD": 0.0,
+        "Cm": 0.0,
+        "CD_induced": 0.0,
+        "CL_alpha": 0.0,
+        "Cm_alpha": 0.0,
+        "Cm_q": 0.0
+      },
+      "raw_report_numbers_match": {
+        "forces.txt": true,
+        "derivatives.txt": true
+      },
+      "passed": true
+    },
+    {
+      "model": "airfoil",
+      "variant": "default",
+      "alpha_deg": 0,
+      "wrapper": {
+        "alpha_deg": 0.0,
+        "CL": 0.0,
+        "CD": 0.0,
+        "Cm": 0.0,
+        "CD_induced": 0.0,
+        "CL_alpha": 6.324478,
+        "Cm_alpha": 0.000336,
+        "Cm_q": -0.793855
+      },
+      "direct": {
+        "alpha_deg": 0.0,
+        "CL": 0.0,
+        "CD": 0.0,
+        "Cm": 0.0,
+        "CD_induced": 0.0,
+        "CL_alpha": 6.324478,
+        "Cm_alpha": 0.000336,
+        "Cm_q": -0.793855
+      },
+      "absolute_differences": {
+        "alpha_deg": 0.0,
+        "CL": 0.0,
+        "CD": 0.0,
+        "Cm": 0.0,
+        "CD_induced": 0.0,
+        "CL_alpha": 0.0,
+        "Cm_alpha": 0.0,
+        "Cm_q": 0.0
+      },
+      "raw_report_numbers_match": {
+        "forces.txt": true,
+        "derivatives.txt": true
+      },
+      "passed": true
+    },
+    {
+      "model": "airfoil",
+      "variant": "default",
+      "alpha_deg": 4.04,
+      "wrapper": {
+        "alpha_deg": 4.04,
+        "CL": 0.44557,
+        "CD": 0.00012,
+        "Cm": 2e-05,
+        "CD_induced": 0.0001182,
+        "CL_alpha": 6.308407,
+        "Cm_alpha": 0.000333,
+        "Cm_q": -0.791882
+      },
+      "direct": {
+        "alpha_deg": 4.04,
+        "CL": 0.44557,
+        "CD": 0.00012,
+        "Cm": 2e-05,
+        "CD_induced": 0.0001182,
+        "CL_alpha": 6.308407,
+        "Cm_alpha": 0.000333,
+        "Cm_q": -0.791882
+      },
+      "absolute_differences": {
+        "alpha_deg": 0.0,
+        "CL": 0.0,
+        "CD": 0.0,
+        "Cm": 0.0,
+        "CD_induced": 0.0,
+        "CL_alpha": 0.0,
+        "Cm_alpha": 0.0,
+        "Cm_q": 0.0
+      },
+      "raw_report_numbers_match": {
+        "forces.txt": true,
+        "derivatives.txt": true
+      },
+      "passed": true
+    },
+    {
+      "model": "airfoil",
+      "variant": "default",
+      "alpha_deg": 10.12,
+      "wrapper": {
+        "alpha_deg": 10.12,
+        "CL": 1.11115,
+        "CD": 0.00073,
+        "Cm": 6e-05,
+        "CD_induced": 0.0007255,
+        "CL_alpha": 6.223904,
+        "Cm_alpha": 0.000316,
+        "Cm_q": -0.781504
+      },
+      "direct": {
+        "alpha_deg": 10.12,
+        "CL": 1.11115,
+        "CD": 0.00073,
+        "Cm": 6e-05,
+        "CD_induced": 0.0007255,
+        "CL_alpha": 6.223904,
+        "Cm_alpha": 0.000316,
+        "Cm_q": -0.781504
+      },
+      "absolute_differences": {
+        "alpha_deg": 0.0,
+        "CL": 0.0,
+        "CD": 0.0,
+        "Cm": 0.0,
+        "CD_induced": 0.0,
+        "CL_alpha": 0.0,
+        "Cm_alpha": 0.0,
+        "Cm_q": 0.0
+      },
+      "raw_report_numbers_match": {
+        "forces.txt": true,
+        "derivatives.txt": true
+      },
+      "passed": true
+    },
+    {
+      "model": "airfoil",
+      "variant": "ar_10",
+      "alpha_deg": 4,
+      "wrapper": {
+        "alpha_deg": 4.0,
+        "CL": 0.34025,
+        "CD": 0.00383,
+        "Cm": 0.00213,
+        "CD_induced": 0.0038341,
+        "CL_alpha": 4.858168,
+        "Cm_alpha": 0.030326,
+        "Cm_q": -0.741774
+      },
+      "direct": {
+        "alpha_deg": 4.0,
+        "CL": 0.34025,
+        "CD": 0.00383,
+        "Cm": 0.00213,
+        "CD_induced": 0.0038341,
+        "CL_alpha": 4.858168,
+        "Cm_alpha": 0.030326,
+        "Cm_q": -0.741774
+      },
+      "absolute_differences": {
+        "alpha_deg": 0.0,
+        "CL": 0.0,
+        "CD": 0.0,
+        "Cm": 0.0,
+        "CD_induced": 0.0,
+        "CL_alpha": 0.0,
+        "Cm_alpha": 0.0,
+        "Cm_q": 0.0
+      },
+      "raw_report_numbers_match": {
+        "forces.txt": true,
+        "derivatives.txt": true
+      },
+      "passed": true
+    },
+    {
+      "model": "airfoil",
+      "variant": "ar_100",
+      "alpha_deg": 4,
+      "wrapper": {
+        "alpha_deg": 4.0,
+        "CL": 0.42729,
+        "CD": 0.00079,
+        "Cm": 0.00023,
+        "CD_induced": 0.0007895,
+        "CL_alpha": 6.108971,
+        "Cm_alpha": 0.003226,
+        "Cm_q": -0.787178
+      },
+      "direct": {
+        "alpha_deg": 4.0,
+        "CL": 0.42729,
+        "CD": 0.00079,
+        "Cm": 0.00023,
+        "CD_induced": 0.0007895,
+        "CL_alpha": 6.108971,
+        "Cm_alpha": 0.003226,
+        "Cm_q": -0.787178
+      },
+      "absolute_differences": {
+        "alpha_deg": 0.0,
+        "CL": 0.0,
+        "CD": 0.0,
+        "Cm": 0.0,
+        "CD_induced": 0.0,
+        "CL_alpha": 0.0,
+        "Cm_alpha": 0.0,
+        "Cm_q": 0.0
+      },
+      "raw_report_numbers_match": {
+        "forces.txt": true,
+        "derivatives.txt": true
+      },
+      "passed": true
+    },
+    {
+      "model": "airfoil",
+      "variant": "ar_1000",
+      "alpha_deg": 4,
+      "wrapper": {
+        "alpha_deg": 4.0,
+        "CL": 0.44117,
+        "CD": 0.00012,
+        "Cm": 2e-05,
+        "CD_induced": 0.0001159,
+        "CL_alpha": 6.308724,
+        "Cm_alpha": 0.000333,
+        "Cm_q": -0.791921
+      },
+      "direct": {
+        "alpha_deg": 4.0,
+        "CL": 0.44117,
+        "CD": 0.00012,
+        "Cm": 2e-05,
+        "CD_induced": 0.0001159,
+        "CL_alpha": 6.308724,
+        "Cm_alpha": 0.000333,
+        "Cm_q": -0.791921
+      },
+      "absolute_differences": {
+        "alpha_deg": 0.0,
+        "CL": 0.0,
+        "CD": 0.0,
+        "Cm": 0.0,
+        "CD_induced": 0.0,
+        "CL_alpha": 0.0,
+        "Cm_alpha": 0.0,
+        "Cm_q": 0.0
+      },
+      "raw_report_numbers_match": {
+        "forces.txt": true,
+        "derivatives.txt": true
+      },
+      "passed": true
+    }
+  ]
+}
