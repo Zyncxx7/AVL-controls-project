@@ -78,8 +78,9 @@ comparison data sources.
 
 Stage 4 uses the clean C172P aerodynamic parameters from the supplied PDF.
 Open [the comparison report](04_nonlinear_6dof/results/research_results.pdf)
-for trim elevator versus airspeed, additional trim parameters, the increasing
-and decreasing stall loop, and a time-stepped elevator-pulse response.
+for trim elevator versus airspeed, additional trim parameters, and a
+time-stepped elevator-pulse response. Stall memory remains in the aircraft
+equations; a separate lift-branch plotting experiment is not run.
 Numeric results and reasons for unavailable trim points are in that folder's
 CSV files. The original model and the standalone AVL stages are
 preserved. The new nonlinear stage does not query AVL or invoke JSBSim.

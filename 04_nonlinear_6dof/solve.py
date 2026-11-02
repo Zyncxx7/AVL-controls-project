@@ -1,4 +1,4 @@
-"""C172: trim versus speed, stall loop, and a time-stepped response.
+"""C172: a time-stepped response and trim-versus-speed comparison.
 
 Everything for the new aircraft model is in this file.
 Read the settings and tables, then main() at the bottom.
@@ -310,11 +310,82 @@ def main():
     results = folder / "results"
     results.mkdir(exist_ok=True)
 
+    # 1. FIND STARTING TRIM AND SET THE INITIAL AIRCRAFT VALUES.
+    alphas, elevators, throttles = find_trim(START_SPEED_KT)
+    for i in range(len(alphas)):
+        if 0 <= throttles[i] <= 1:
+            break
+    else:
+        raise RuntimeError("No feasible starting trim.")
+    alpha = alphas[i]
+    trim_elevator = elevators[i]
+    throttle = throttles[i]
+    u = START_SPEED_KT*KNOT*cos(alpha)
+    v = 0.0
+    w = START_SPEED_KT*KNOT*sin(alpha)
+    p = q = r = 0.0
+    roll = yaw = 0.0
+    pitch = alpha
+    north = east = down = 0.0
+    stalled = 0
+    time_history, speed_history, pitch_history, altitude_history = [], [], [], []
+
+    # A fixed step must land exactly on the pulse edges and final time.
+    if DT <= 0:
+        raise ValueError("DT must be positive.")
+    for boundary in (SECONDS, PULSE_START, PULSE_END):
+        if abs(boundary/DT - round(boundary/DT)) > 1e-7:
+            raise ValueError("Choose DT that divides the duration and pulse times exactly.")
+
+    # 2. STEP THE AIRCRAFT THROUGH TIME AND SAVE ITS RESPONSE.
+    with (results / "time_response.csv").open("w", newline="") as file:
+        table = csv.writer(file)
+        table.writerow(["time_s", "u_m_s", "v_m_s", "w_m_s", "p_rad_s", "q_rad_s", "r_rad_s",
+                        "roll_rad", "pitch_rad", "yaw_rad", "north_m", "east_m", "down_m", "stalled"])
+        for step in range(round(SECONDS/DT) + 1):
+            time = step*DT
+            alpha = atan2(w, u)
+            stalled = stall_state(alpha, stalled)
+            table.writerow([time, u, v, w, p, q, r, roll, pitch, yaw, north, east, down, stalled])
+            time_history.append(time)
+            speed_history.append(sqrt(u*u + v*v + w*w)/KNOT)
+            pitch_history.append(pitch/DEG)
+            altitude_history.append(-down)
+            if step == round(SECONDS/DT):
+                break
+
+            elevator = trim_elevator
+            if PULSE_START <= time < PULSE_END:
+                elevator = elevator + ELEVATOR_PULSE_DEG
+
+            u_dot, v_dot, w_dot, p_dot, q_dot, r_dot, roll_dot, pitch_dot, yaw_dot, north_dot, east_dot, down_dot = calculate_rates(
+                u, v, w, p, q, r, roll, pitch, yaw, down,
+                throttle, elevator, 0.0, 0.0, stalled)
+
+            # Forward Euler, exactly the form used in the original model:
+            # new value = old value + timestep * rate of change.
+            u = u + DT*u_dot
+            v = v + DT*v_dot
+            w = w + DT*w_dot
+            p = p + DT*p_dot
+            q = q + DT*q_dot
+            r = r + DT*r_dot
+            roll = roll + DT*roll_dot
+            pitch = pitch + DT*pitch_dot
+            yaw = yaw + DT*yaw_dot
+            north = north + DT*north_dot
+            east = east + DT*east_dot
+            down = down + DT*down_dot
+            if not all(isfinite(value) for value in (u, v, w, p, q, r, roll, pitch, yaw, north, east, down)):
+                raise FloatingPointError("A state value is not finite.")
+
+    print("Starting trim:", START_SPEED_KT, "kt; elevator", trim_elevator, "deg; throttle", throttle)
+
     # The original file is used ONLY for the reference comparison.
     sys.path.insert(0, str(folder.parent / "01_simple_6dof"))
     import simple_c172_6dof as original
 
-    # 1. TRIM VERSUS SPEED. Separate lists are used for each plotted curve.
+    # 3. COMPARE LEVEL-FLIGHT TRIM AT DIFFERENT SPEEDS.
     datcom_speed, datcom_elevator, datcom_alpha, datcom_throttle = [], [], [], []
     avl_speed, avl_elevator, avl_alpha, avl_throttle = [], [], [], []
     pdf_speed, pdf_elevator, pdf_alpha, pdf_throttle = [], [], [], []
@@ -373,104 +444,6 @@ def main():
                         pdf_alpha.append(alpha_deg)
                         pdf_throttle.append(throttles[i])
 
-    # 2. STALL LOOP. Prescribe alpha up and down; keep the branch memory.
-    up_alpha, up_lift, down_alpha, down_lift = [], [], [], []
-    cycle_time, cycle_memory = [], []
-    stalled = 0
-    with (results / "stall_cycle.csv").open("w", newline="") as file:
-        table = csv.writer(file)
-        table.writerow(["time_s", "direction", "alpha_rad", "alpha_deg", "stalled", "CL_wing", "endpoint_held"])
-        for i in range(1645):
-            if i <= 822:
-                alpha = -0.05 + (0.361 + 0.05)*i/822
-                direction = "increasing"
-            else:
-                alpha = -0.05 + (0.361 + 0.05)*(1644-i)/822
-                direction = "decreasing"
-            stalled = stall_state(alpha, stalled)
-            if stalled == 0:
-                CL = interpolate(alpha, ALPHA, CL_ATTACHED)
-            else:
-                CL = interpolate(alpha, ALPHA, CL_STALLED)
-            table.writerow([i*0.02, direction, alpha, alpha/DEG, stalled, CL, alpha > ALPHA[-1]])
-            cycle_time.append(i*0.02)
-            cycle_memory.append(stalled)
-            if direction == "increasing":
-                up_alpha.append(alpha/DEG)
-                up_lift.append(CL)
-            else:
-                down_alpha.append(alpha/DEG)
-                down_lift.append(CL)
-
-    # 3. NEW MODEL TIME RESPONSE. Use named variables, not a state dictionary.
-    alphas, elevators, throttles = find_trim(START_SPEED_KT)
-    for i in range(len(alphas)):
-        if 0 <= throttles[i] <= 1:
-            break
-    else:
-        raise RuntimeError("No feasible starting trim.")
-    alpha = alphas[i]
-    trim_elevator = elevators[i]
-    throttle = throttles[i]
-    u = START_SPEED_KT*KNOT*cos(alpha)
-    v = 0.0
-    w = START_SPEED_KT*KNOT*sin(alpha)
-    p = q = r = 0.0
-    roll = yaw = 0.0
-    pitch = alpha
-    north = east = down = 0.0
-    stalled = 0
-    time_history, speed_history, pitch_history, altitude_history = [], [], [], []
-
-    # A fixed step must land exactly on the pulse edges and final time.
-    if DT <= 0:
-        raise ValueError("DT must be positive.")
-    for boundary in (SECONDS, PULSE_START, PULSE_END):
-        if abs(boundary/DT - round(boundary/DT)) > 1e-7:
-            raise ValueError("Choose DT that divides the duration and pulse times exactly.")
-
-    with (results / "time_response.csv").open("w", newline="") as file:
-        table = csv.writer(file)
-        table.writerow(["time_s", "u_m_s", "v_m_s", "w_m_s", "p_rad_s", "q_rad_s", "r_rad_s",
-                        "roll_rad", "pitch_rad", "yaw_rad", "north_m", "east_m", "down_m", "stalled"])
-        for step in range(round(SECONDS/DT) + 1):
-            time = step*DT
-            alpha = atan2(w, u)
-            stalled = stall_state(alpha, stalled)
-            table.writerow([time, u, v, w, p, q, r, roll, pitch, yaw, north, east, down, stalled])
-            time_history.append(time)
-            speed_history.append(sqrt(u*u + v*v + w*w)/KNOT)
-            pitch_history.append(pitch/DEG)
-            altitude_history.append(-down)
-            if step == round(SECONDS/DT):
-                break
-
-            elevator = trim_elevator
-            if PULSE_START <= time < PULSE_END:
-                elevator = elevator + ELEVATOR_PULSE_DEG
-
-            u_dot, v_dot, w_dot, p_dot, q_dot, r_dot, roll_dot, pitch_dot, yaw_dot, north_dot, east_dot, down_dot = calculate_rates(
-                u, v, w, p, q, r, roll, pitch, yaw, down,
-                throttle, elevator, 0.0, 0.0, stalled)
-
-            # Forward Euler, exactly the form used in the original model:
-            # new value = old value + timestep * rate of change.
-            u = u + DT*u_dot
-            v = v + DT*v_dot
-            w = w + DT*w_dot
-            p = p + DT*p_dot
-            q = q + DT*q_dot
-            r = r + DT*r_dot
-            roll = roll + DT*roll_dot
-            pitch = pitch + DT*pitch_dot
-            yaw = yaw + DT*yaw_dot
-            north = north + DT*north_dot
-            east = east + DT*east_dot
-            down = down + DT*down_dot
-            if not all(isfinite(value) for value in (u, v, w, p, q, r, roll, pitch, yaw, north, east, down)):
-                raise FloatingPointError("A state value is not finite.")
-
-    print("Starting trim:", START_SPEED_KT, "kt; elevator", trim_elevator, "deg; throttle", throttle)
     print("Numerical results:", results)
     if no_plots:
         return
@@ -516,21 +489,6 @@ def main():
         figure.suptitle("Level-flight trim | clean configuration | sea-level density | mass 1043 kg")
         figure.tight_layout()
         figure.savefig(results / "trim_parameters.png", dpi=160)
-        report.savefig(figure)
-        plt.close(figure)
-
-        figure, axes = plt.subplots(2, 1, figsize=(10, 7))
-        axes[0].plot(up_alpha, up_lift, label="Increasing alpha")
-        axes[0].plot(down_alpha, down_lift, label="Decreasing alpha")
-        axes[0].set(xlabel="Angle of attack (deg)", ylabel="Wing-body CL")
-        axes[0].legend()
-        axes[1].plot(cycle_time, cycle_memory)
-        axes[1].set(xlabel="Time in prescribed cycle (s)", ylabel="Stall state", yticks=[0, 1])
-        for axis in axes:
-            axis.grid(True, alpha=0.3)
-        figure.suptitle("Prescribed alpha cycle | -0.05 to 0.361 rad and back | sample interval 0.02 s")
-        figure.tight_layout()
-        figure.savefig(results / "stall_loop.png", dpi=160)
         report.savefig(figure)
         plt.close(figure)
 
