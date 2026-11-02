@@ -81,7 +81,7 @@ Open [the comparison report](04_nonlinear_6dof/results/research_results.pdf)
 for trim elevator versus airspeed, additional trim parameters, the increasing
 and decreasing stall loop, and a time-stepped elevator-pulse response.
 Numeric results and reasons for unavailable trim points are in that folder's
-CSV and JSON files. The original model and the standalone AVL stages are
+CSV files. The original model and the standalone AVL stages are
 preserved. The new nonlinear stage does not query AVL or invoke JSBSim.
 
 Run `python tests/test_nonlinear_6dof.py` for the nonlinear regression checks.
@@ -89,3 +89,5 @@ The spin calculation is deferred, as requested after the trim and stall work.
 
 For a guided code reading order, start with
 [the nonlinear stage's reading guide](04_nonlinear_6dof/README.md#where-to-start-reading).
+The nonlinear model is now a single `solve.py` script with named state
+variables and an explicit forward-Euler loop, like the original model.
