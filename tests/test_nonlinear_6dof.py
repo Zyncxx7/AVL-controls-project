@@ -4,6 +4,8 @@ import math
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import patch
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "04_nonlinear_6dof"))
@@ -128,7 +130,7 @@ class BeginnerModelChecks(unittest.TestCase):
     def test_stall_entry_and_recovery_in_6dof_time_steps(self):
         state, elevator, throttle = trim_state(100)
         speed = 60*model.KNOT
-        state[0], state[2], state[7], state[4] = speed*math.cos(.34), speed*math.sin(.34), .34, .6
+        state[0], state[2], state[7], state[4] = speed*math.cos(.34), speed*math.sin(.34), .34, .8
         history = run_test_steps(state, elevator, throttle, 3, .001)
         changes = []
         for i in range(1, len(history)):
@@ -138,19 +140,50 @@ class BeginnerModelChecks(unittest.TestCase):
         self.assertGreater(math.atan2(changes[0][1][2], changes[0][1][0]), .36)
         self.assertLess(math.atan2(changes[1][1][2], changes[1][1][0]), .09)
 
-    def test_mixed_motion_keeps_all_lateral_and_longitudinal_terms(self):
-        # Reference from the previous, independently checked implementation.
+    def test_reference_cg_matches_saved_source_configuration(self):
+        root = ET.parse(ROOT/'04_nonlinear_6dof/reference/c172p.xml').getroot()
+        cg = root.find("mass_balance/location[@name='CG']")
+        self.assertEqual(cg.attrib['unit'], 'IN')
+        for actual, axis in zip((model.CG_X, model.CG_Y, model.CG_Z), ('x', 'y', 'z')):
+            self.assertAlmostEqual(actual, float(cg.findtext(axis))*.0254)
+        # The PDF coefficients belong to its own reference, not the upstream RP.
+        self.assertEqual((model.AERO_X, model.AERO_Y, model.AERO_Z),
+                         (43.8*.0254, 0, 58.7*.0254))
+
+    def test_cg_transfer_matches_independent_cross_product_in_all_axes(self):
+        # Moving the CG must leave aerodynamic forces unchanged and change
+        # angular accelerations by (old_CG - new_CG) cross F, divided by inertia.
         state, elevator, throttle = trim_state(100)
         state[1] = 1.2
         state[3:6] = [.03, -.04, .02]
         state[6] = .05
-        rates = model.calculate_rates(*state[:9], state[11], throttle, elevator, 2, -3, 0)
-        expected = [-0.020672631109009548, -1.0013390137299576, -2.031483212669521,
-                    0.8369110245830702, 0.24455217915888264, 0.39451682623068585,
-                    0.030408503063226226, -0.04094959380121222, 0.01798047947826718,
-                    51.445729401973516, 1.140085741899082, 0.058499231082667746]
-        for actual, reference in zip(rates, expected):
-            self.assertAlmostEqual(actual, reference, delta=1e-10)
+        args = (*state[:9], state[11], throttle, elevator, 2, -3, 0)
+        rates = model.calculate_rates(*args)
+        u,v,w,p,q,r,roll,pitch,yaw = state[:9]
+        speed = math.sqrt(u*u+v*v+w*w)
+        # Recover aerodynamic force from Newton's equations, independently
+        # of the aerodynamic force-to-moment implementation being checked.
+        fx = model.MASS*(rates[0]-r*v+q*w+model.G*math.sin(pitch))
+        fx -= model.thrust(throttle, speed, 1.225)
+        fy = model.MASS*(rates[1]-p*w+r*u-model.G*math.sin(roll)*math.cos(pitch))
+        fz = model.MASS*(rates[2]-q*u+p*v-model.G*math.cos(roll)*math.cos(pitch))
+        # Structural CG displacement (x aft, y right, z up), in metres.
+        dx,dy,dz = .12,-.08,.09
+        with patch.multiple(model, CG_X=model.CG_X+dx, CG_Y=model.CG_Y+dy, CG_Z=model.CG_Z+dz):
+            moved = model.calculate_rates(*args)
+        # Arm change in body coordinates is (dx, -dy, dz).
+        expected = ((-dy*fz-dz*fy)/model.IXX,
+                    (dz*fx-dx*fz)/model.IYY,
+                    (dx*fy+dy*fx)/model.IZZ)
+        for i in range(3):
+            self.assertAlmostEqual(moved[i], rates[i], delta=1e-12)
+            self.assertAlmostEqual(moved[i+3]-rates[i+3], expected[i], delta=1e-12)
+
+    def test_trim_changes_when_reference_and_cg_are_coincident(self):
+        corrected = model.find_trim(100)[1][0]
+        with patch.multiple(model, AERO_X=model.CG_X, AERO_Y=model.CG_Y, AERO_Z=model.CG_Z):
+            coincident = model.find_trim(100)[1][0]
+        self.assertGreater(abs(corrected-coincident), .1)
 
 
 if __name__ == '__main__':

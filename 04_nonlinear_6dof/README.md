@@ -46,16 +46,31 @@ elevator from 2 to 3 seconds. All three now use the same forward-Euler timestep.
 
 ## Physical assumptions
 
-The source is `reference/aerodynamics.pdf`. Its zero-flap lift/drag tables
-and force/moment derivatives are used directly. The alpha-rate lift and
-pitch terms, lateral derivatives and propwash effects are retained.
-No JSBSim or live AVL process is called.
+The aerodynamic source is `reference/aerodynamics.pdf`. Its zero-flap lift/drag
+tables and force/moment derivatives are retained, including alpha-rate terms.
+Propwash and wake corrections are disabled as requested. No JSBSim or live AVL
+process is called.
 
-Mass, inertias, atmosphere and propeller are retained from the original model.
-The PDF does not provide a complete loading/engine configuration. Free-air
-ground-effect factors are one; the aerodynamic reference and CG are assumed
-coincident. Propwash is estimated by an actuator-disk formula. These choices
-mean this is a PDF-parameter comparison, not an exact loaded JSBSim replay.
+The fixed reference CG is (41, 0, 36.5) inches from the saved JSBSim
+`reference/c172p.xml` mass-balance block. This is the **empty-aircraft reference
+CG**, not the loaded CG after adding its pilot and fuel. The comparison retains
+the original mass (1043 kg) and inertias; it does not reproduce the XML's empty
+or default loaded mass condition. No loaded-CG calculation is claimed.
+
+The aerodynamic reference stays (43.8, 0, 58.7) inches as specified on PDF page 2.
+Both use structural x aft, y right, z up; the CG-to-reference body-axis arm is
+(-0.07112, 0, -0.56388) metres. Aerodynamic moments are transferred with
+`moment_CG = moment_reference + arm cross force` in all three axes, in trim and
+time stepping. The current upstream XML has a different aerodynamic reference
+(43.2, 0, 59.4) inches; its coefficients/reference are not substituted for the
+PDF's. Pairing the external reference CG with the PDF is a fixed-CG comparison
+configuration, not evidence that both describe the identical loaded aircraft.
+The AVL folders retain their own CG and datum; their coordinates are not mixed
+with the PDF model.
+
+Mass, inertias, atmosphere and propeller remain from the original comparison.
+Thrust still acts through the CG in this benchmark. See `ASSUMPTION_AUDIT.md`
+for the remaining limitations. See `reference/SOURCES.md` for provenance.
 
 Stall memory sets above 0.36 rad, resets below 0.09 rad, and otherwise holds.
 The 0.28-rad lift maximum is not substituted for the switching threshold.

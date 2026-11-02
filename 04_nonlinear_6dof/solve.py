@@ -32,6 +32,20 @@ SPEEDS_KT = range(40, 126)
 PROP_DIAMETER = 75.0 * 0.0254
 PROP_RPM = 2400.0
 
+# Reference CG from JSBSim c172p.xml <mass_balance>: (41, 0, 36.5) in.
+# This is the EMPTY-aircraft reference CG, not the loaded CG including fuel/payload.
+# Keep the original comparison mass/inertias above; this is a fixed-CG benchmark.
+# Structural coordinates: x aft, y right, z up. Convert inches to metres.
+CG_X = 41.0 * 0.0254
+CG_Y = 0.0
+CG_Z = 36.5 * 0.0254
+
+# Aerodynamic moment reference from Ranjith's PDF, page 2, same structural axes.
+# Keep the PDF reference with its coefficients. Upstream XML uses a different RP.
+AERO_X = 43.8 * 0.0254
+AERO_Y = 0.0
+AERO_Z = 58.7 * 0.0254
+
 # PDF tables. Matching positions in the two lists belong to the same row.
 ALPHA = [-0.09, 0, 0.09, 0.10, 0.12, 0.14, 0.16, 0.17,
          0.19, 0.21, 0.24, 0.26, 0.28, 0.30, 0.32, 0.34, 0.36]
@@ -112,19 +126,43 @@ def trim_balance(speed_kt, alpha, stalled):
     speed = speed_kt * KNOT
     rho = 1.225
     qS = 0.5 * rho * speed**2 * S
-    propeller_area = pi * PROP_DIAMETER**2 / 4
-    base_cd = CD_ZERO + interpolate(alpha, CD_ALPHA, CD_WING)
+    if AERO_Y != CG_Y:
+        raise ValueError("This symmetric trim calculation requires CG and aerodynamic reference on the same y centreline.")
 
-    # Balance pitch: CM_ZERO + CM_ALPHA*alpha + CM_DE*elevator*tail_ratio = 0.
-    # Elevator drag changes required thrust and therefore the tail pressure.
-    # Substitution gives a quadratic in the magnitude of the elevator angle.
-    tail_base = cos(alpha)**2 + S*base_cd / (propeller_area*cos(alpha))
-    tail_elevator = S*CD_DE / (propeller_area*cos(alpha))
-    required_effect = -(CM_ZERO + CM_ALPHA*alpha) / CM_DE
-    discriminant = tail_base**2 + 4*tail_elevator*abs(required_effect)
-    elevator = 2*abs(required_effect) / (tail_base + sqrt(discriminant))
-    if required_effect < 0:
-        elevator = -elevator
+    # Arm from CG to aerodynamic reference, in body forward/right/down axes.
+    rx = CG_X - AERO_X
+    rz = CG_Z - AERO_Z
+    base_cd = CD_ZERO + interpolate(alpha, CD_ALPHA, CD_WING)
+    if stalled == 0:
+        base_cl = interpolate(alpha, ALPHA, CL_ATTACHED)
+    else:
+        base_cl = interpolate(alpha, ALPHA, CL_STALLED)
+
+    # No propwash: balance the reference-point moment PLUS r cross F.
+    # Divide the pitch equation by qS. Its units are then metres.
+    drag_arm = rx*sin(alpha) - rz*cos(alpha)
+    lift_arm = rx*cos(alpha) + rz*sin(alpha)
+    base_pitch = C*(CM_ZERO + CM_ALPHA*alpha) + drag_arm*base_cd + lift_arm*base_cl
+    elevator_pitch = C*CM_DE + lift_arm*CL_DE
+    elevator_drag_pitch = drag_arm*CD_DE
+
+    # Elevator drag contains abs(elevator), so check its two linear cases.
+    # No quadratic, wake model, guessed elevator limit or root choice is used.
+    elevator = None
+    positive_slope = elevator_pitch + elevator_drag_pitch
+    if positive_slope != 0:
+        candidate = -base_pitch / positive_slope
+        if candidate >= 0:
+            elevator = candidate
+    negative_slope = elevator_pitch - elevator_drag_pitch
+    if negative_slope != 0:
+        candidate = -base_pitch / negative_slope
+        if candidate < 0:
+            if elevator is not None:
+                raise ValueError("Two elevator moment-balance roots exist; the trim solver must not silently choose one.")
+            elevator = candidate
+    if elevator is None:
+        raise ValueError("No unique elevator moment balance exists at this trial alpha.")
 
     # Balance forward force: thrust*cos(alpha) = drag.
     cd = base_cd + CD_DE*abs(elevator)
@@ -135,11 +173,7 @@ def trim_balance(speed_kt, alpha, stalled):
     if full_thrust > 0:
         throttle = required_thrust / full_thrust
 
-    if stalled == 0:
-        cl = interpolate(alpha, ALPHA, CL_ATTACHED)
-    else:
-        cl = interpolate(alpha, ALPHA, CL_STALLED)
-    cl = cl + CL_DE*elevator
+    cl = base_cl + CL_DE*elevator
 
     # Balance vertical force: lift + thrust*sin(alpha) = weight.
     force_error = qS*cl + drag*tan(alpha) - MASS*G
@@ -217,10 +251,6 @@ def calculate_rates(u, v, w, p, q, r, roll, pitch, yaw, down,
     rudder = rudder_deg*DEG
 
     engine_thrust = thrust(throttle, speed, rho)
-    propeller_area = pi*PROP_DIAMETER**2 / 4
-    axial_speed = speed*cos(alpha)
-    induced_speed = (sqrt(axial_speed**2 + 2*max(engine_thrust, 0)/(rho*propeller_area)) - axial_speed)/2
-    tail_ratio = ((axial_speed + 2*induced_speed)/speed)**2
 
     # LIFT AND DRAG. Add the alpha-rate term after solving its feedback below.
     if stalled == 0:
@@ -258,22 +288,32 @@ def calculate_rates(u, v, w, p, q, r, roll, pitch, yaw, down,
     Cl_r = interpolate(alpha, [0, 0.094], [0.0798, 0.1869])
     Cl = Cl_beta - 0.484*p_hat + Cl_r*r_hat + 0.229*aileron + 0.0147*rudder
 
-    # PITCH MOMENT: alpha, pitch rate, alpha rate and elevator with propwash.
+    # PITCH MOMENT: alpha, pitch rate, alpha rate and elevator; no propwash.
     Cm = CM_ZERO + CM_ALPHA*alpha + CM_Q*q_hat
-    Cm = Cm + CM_ADOT*alpha_dot_hat + CM_DE*elevator*tail_ratio
+    Cm = Cm + CM_ADOT*alpha_dot_hat + CM_DE*elevator
 
-    # YAW MOMENT: sideslip, roll/yaw damping, aileron and rudder with propwash.
+    # YAW MOMENT: sideslip, roll/yaw damping, aileron and rudder; no propwash.
     Cn_beta = interpolate(beta, [-0.349, 0, 0.349], [-0.0205, 0, 0.0205])
-    Cn = Cn_beta - 0.0278*p_hat - 0.0937*r_hat - 0.0053*aileron - 0.043*rudder*tail_ratio
+    Cn = Cn_beta - 0.0278*p_hat - 0.0937*r_hat - 0.0053*aileron - 0.043*rudder
 
     # Convert coefficients to body forces (N) and moments (N m).
     lift = qS*CL
-    Fx = engine_thrust - drag*cos(alpha)*cos(beta) - side*cos(alpha)*sin(beta) + lift*sin(alpha)
+    Fx_aero = -drag*cos(alpha)*cos(beta) - side*cos(alpha)*sin(beta) + lift*sin(alpha)
+    Fx = engine_thrust + Fx_aero
     Fy = -drag*sin(beta) + side*cos(beta)
     Fz = -drag*sin(alpha)*cos(beta) - side*sin(alpha)*sin(beta) - lift*cos(alpha)
     L = qS*B*Cl
     M = qS*C*Cm
     N = qS*B*Cn
+
+    # Transfer AERODYNAMIC moments to the CG: moment_CG = moment_ref + r x F.
+    # r points from CG to the aerodynamic reference, expressed in body axes.
+    rx = CG_X - AERO_X
+    ry = AERO_Y - CG_Y
+    rz = CG_Z - AERO_Z
+    L = L + ry*Fz - rz*Fy
+    M = M + rz*Fx_aero - rx*Fz
+    N = N + rx*Fy - ry*Fx_aero
 
     # Linear acceleration.
     u_dot = r*v - q*w + Fx/MASS - G*sin(pitch)
@@ -379,6 +419,7 @@ def main():
             if not all(isfinite(value) for value in (u, v, w, p, q, r, roll, pitch, yaw, north, east, down)):
                 raise FloatingPointError("A state value is not finite.")
 
+    print("Fixed-CG comparison: source empty-aircraft CG; original comparison mass/inertias; no propwash/wake.")
     print("Starting trim:", START_SPEED_KT, "kt; elevator", trim_elevator, "deg; throttle", throttle)
 
     # The original file is used ONLY for the reference comparison.
@@ -462,7 +503,7 @@ def main():
         axis.plot(post_speed, post_elevator, label="PDF attached, post-peak")
         axis.plot(stalled_speed, stalled_elevator, ".", label="PDF stalled")
         axis.set(xlabel="True airspeed (kt)", ylabel="Trim elevator (deg)",
-                 title="Level-flight trim | clean configuration | sea-level density | mass 1043 kg")
+                 title="Level flight | clean | sea-level density | mass 1043 kg\nPDF model: reference CG (41, 0, 36.5) in | no propwash/wake")
         axis.grid(True, alpha=0.3)
         axis.legend()
         figure.tight_layout()
@@ -486,7 +527,7 @@ def main():
         axes[0].legend()
         for axis in axes:
             axis.grid(True, alpha=0.3)
-        figure.suptitle("Level-flight trim | clean configuration | sea-level density | mass 1043 kg")
+        figure.suptitle("Level flight | clean | sea-level density | mass 1043 kg\nPDF model: reference CG (41, 0, 36.5) in | no propwash/wake")
         figure.tight_layout()
         figure.savefig(results / "trim_parameters.png", dpi=160)
         report.savefig(figure)
@@ -517,7 +558,7 @@ def main():
         axes[0].legend()
         for axis in axes:
             axis.grid(True, alpha=0.3)
-        figure.suptitle(f"Each model trimmed at {START_SPEED_KT:g} kt | elevator {ELEVATOR_PULSE_DEG:g} deg from {PULSE_START:g}-{PULSE_END:g} s | dt {DT:g} s")
+        figure.suptitle(f"Each model trimmed at {START_SPEED_KT:g} kt | elevator {ELEVATOR_PULSE_DEG:g} deg from {PULSE_START:g}-{PULSE_END:g} s | dt {DT:g} s\nPDF model: mass 1043 kg | reference CG (41, 0, 36.5) in | no propwash/wake")
         figure.tight_layout()
         figure.savefig(results / "time_response.png", dpi=160)
         report.savefig(figure)
