@@ -1,23 +1,19 @@
 # AVL controls project
 
-The project is organized into four stages. The nonlinear comparison in stage 4
-imports the original stage 1 model as its reference.
+C172 flight-dynamics modelling and standalone aerodynamic calculations with
+Athena Vortex Lattice (AVL).
 
-| Stage | Folder | Purpose |
+| Stage | Folder | Analysis |
 | --- | --- | --- |
-| 1 | [01_simple_6dof](01_simple_6dof/) | C172 six degree of freedom model using tabulated aerodynamic coefficients |
-| 2 | [02_c172_live_avl](02_c172_live_avl/) | Fresh C172 AVL solutions at prescribed angles of attack |
-| 3 | [03_naca0012_live_avl](03_naca0012_live_avl/) | NACA 0012 wing calculations and experimental lift comparison |
-| 4 | [04_nonlinear_6dof](04_nonlinear_6dof/) | Original-versus-nonlinear trim elevator curves, stall hysteresis and time-stepped 6DOF responses |
+| 1 | [01_simple_6dof](01_simple_6dof/) | Baseline C172 6DOF model using DATCOM and AVL coefficient tables |
+| 2 | [02_c172_live_avl](02_c172_live_avl/) | Standalone C172 AVL solutions and interpolation comparison |
+| 3 | [03_naca0012_live_avl](03_naca0012_live_avl/) | NACA 0012 finite-wing solutions and experimental lift comparison |
+| 4 | [04_nonlinear_6dof](04_nonlinear_6dof/) | Nonlinear C172 trim, stall memory and time-domain response |
 
-The standalone solvers call the bundled AVL executable for every operating
-point. They sweep angles of attack; they do not yet update the 6DOF simulation
-with live aerodynamic coefficients.
+## Running the analyses
 
-## Running the stages
-
-Python and Matplotlib are required. The bundled AVL executables are for Windows.
-From this directory:
+Python and Matplotlib are required. The bundled AVL executables run on Windows.
+Commands below run from the project root.
 
 ```powershell
 python -m pip install -r 01_simple_6dof/requirements.txt
@@ -28,67 +24,55 @@ python -m pip install -r 04_nonlinear_6dof/requirements.txt
 python 04_nonlinear_6dof/solve.py
 ```
 
-Each stage has its own README, requirements and results. Stage 1 opens plot
-windows; stages 2 and 3 save their plots to their respective `results/` folders.
+Each stage contains its code, requirements and documentation. Stages 2 and 3
+call AVL for each prescribed operating point; they do not integrate the aircraft
+motion. Stages 1 and 4 integrate the 6DOF equations using tabulated aerodynamics.
 
-## Separate AVL inputs
+## Geometry and mass inputs
 
-Geometry and mass files are supplied under each solver's `inputs/` directory.
-Edit these files directly. No input builder is needed or called. Airfoil aspect
-ratios have separate subfolders, all using 8 chordwise panels and 48 panels per
-half-span. No mesh comparison is run.
+The standalone AVL stages use separate `.avl` and `.mass` files under `inputs/`.
+The programs load these files directly. NACA 0012 aspect ratios have separate
+subfolders with a fixed mesh of 8 chordwise panels and 48 panels per half-span.
 
-For a single operating point:
+Single-point calculations:
 
 ```powershell
 python 02_c172_live_avl/run_avl.py --alpha 5
 python 03_naca0012_live_avl/run_avl.py --alpha 4
 ```
 
-Both runners accept `--geometry`, `--mass`, `--alpha` and `--output`. Keep each
-geometry/mass pair in the same folder. New runs save their commands, console
-output, force report and stability derivatives for inspection.
+Both runners accept `--geometry`, `--mass`, `--alpha` and `--output`.
+Geometry and mass pairs share a folder. Each calculation records its AVL
+commands, console output, forces and stability derivatives.
 
-## Verification and report
+## Results
 
-[C172 plot summary](output/reports/C172_plot_summary.pdf) contains the plots
-from the earlier flight-model work, with simulation setup and parameter captions.
-The associated 6DOF plots are in `01_simple_6dof/output/plots/`.
+- [Baseline C172 report](output/reports/C172_plot_summary.pdf): trim and control-pulse response.
+- [Nonlinear C172 report](04_nonlinear_6dof/results/research_results.pdf): trim elevator, trim alpha/throttle and elevator-pulse response.
+- Stages 2 and 3: coefficient CSVs, comparison figures and numerical summaries under `results/`.
+- Stage 4: trim solutions and time histories under `results/`.
+
+The nonlinear model uses clean-configuration C172P aerodynamic tables and
+force/moment derivatives. Propwash and wake corrections are disabled.
+Aerodynamic moments are transferred to a fixed reference CG. Loading,
+reference-point and aerodynamic limitations are documented in the
+[model description](04_nonlinear_6dof/README.md). Spin analysis is outside the
+current scope.
+
+## Verification
 
 ```powershell
 python tests/verify_avl.py
+python tests/test_nonlinear_6dof.py
 ```
 
-This compares both Python wrappers against separate AVL console sessions using
-explicit `LOAD` and `MASS` commands. It checks 11 operating points, all eight
-returned fields, every number in the force and derivative reports, and input
-file hashes. The summary and paired raw outputs are in
-[output/verification](output/verification/).
+The AVL check compares both wrappers with independent console sessions at
+11 operating points, including raw force/derivative values and input hashes.
+The [verification summary](output/verification/summary.json) is retained;
+per-case logs are generated during the check. The nonlinear tests cover source
+data, CG moment transfer, trim balance, stall switching and timestep convergence.
 
-This establishes wrapper consistency with the same AVL executable, rather than
-experimental accuracy. C172 comparison data are earlier AVL results. The
-airfoil study compares lift with published measurements; AVL's inviscid model
-does not reproduce viscous drag or stall. The supplied mass properties are
-illustrative, rather than measured aircraft data.
-
-AVL is third-party GPL software. Solver READMEs identify its source and the
-comparison data sources.
-
-## Nonlinear model requested on 31 October
-
-Stage 4 uses the clean C172P aerodynamic parameters from the supplied PDF.
-Open [the comparison report](04_nonlinear_6dof/results/research_results.pdf)
-for trim elevator versus airspeed, additional trim parameters, and a
-time-stepped elevator-pulse response. Stall memory remains in the aircraft
-equations; a separate lift-branch plotting experiment is not run.
-Numeric results and reasons for unavailable trim points are in that folder's
-CSV files. The original model and the standalone AVL stages are
-preserved. The new nonlinear stage does not query AVL or invoke JSBSim.
-
-Run `python tests/test_nonlinear_6dof.py` for the nonlinear regression checks.
-The spin calculation is deferred, as requested after the trim and stall work.
-
-For a guided code reading order, start with
-[the nonlinear stage's reading guide](04_nonlinear_6dof/README.md#where-to-start-reading).
-The nonlinear model is now a single `solve.py` script with named state
-variables and an explicit forward-Euler loop, like the original model.
+These checks establish implementation consistency, not flight-test validation.
+AVL's inviscid model does not reproduce viscous drag or stall. Source data,
+software attribution and stage-specific limitations are documented in each
+stage README. AVL is third-party GPL software.

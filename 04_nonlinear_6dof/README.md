@@ -1,95 +1,128 @@
-# C172 nonlinear model: one script
+# Nonlinear C172 6DOF model
 
-The new aircraft model is in **`solve.py`**. It uses ordinary numbers, table
-lists and an explicit forward-Euler time loop. There are no model classes,
-state dictionaries, nested result dictionaries or custom plotting framework.
-The original file is imported only for the reference comparison curves.
+`solve.py` computes level-flight trim and integrates the aircraft response to an
+elevator pulse. The baseline DATCOM and AVL-table models from stage 1 provide
+comparison curves. No JSBSim or AVL process is called during this analysis.
 
 ## Run
 
-From the project root:
+Commands run from the project root:
 
 ```powershell
 python -m pip install -r 04_nonlinear_6dof/requirements.txt
 python 04_nonlinear_6dof/solve.py
 ```
 
-Add `--no-plots` to write the numerical CSVs without loading Matplotlib.
+The `--no-plots` option produces numerical results without loading Matplotlib.
 
-## Where to start reading
+## Model and numerical method
 
-1. Settings and PDF tables are at the top of `solve.py`.
-2. `interpolate()` reads between table rows; `thrust()` is the original propeller calculation.
-3. `stall_state()` is the three-line branch-memory rule.
-4. `trim_balance()` calculates elevator/throttle at a trial alpha; `find_trim()` halves intervals to find force balance.
-5. `calculate_rates()` contains all six aerodynamic coefficients and all 12 aircraft equations, in one place.
-6. `main()` finds the starting trim, sets the aircraft variables, runs the time loop,
-   compares trim across speeds, and plots the results, in that order.
+Aircraft settings, coefficient tables and derivatives are defined at the top
+of `solve.py`. `trim_balance()` balances pitch moment and forward force at a
+trial alpha. `find_trim()` searches for vertical-force balance using a scan of
+901 points augmented by table breakpoints, followed by 50 bisection iterations.
+All bracketed roots within the source table range are retained. A root requires
+throttle between zero and one to be classified as feasible; this classification
+does not establish stability or check elevator travel limits.
 
-In the time loop, `u`, `v`, `w`, `p`, `q`, `r`, `roll`, `pitch`, `yaw`,
-`north`, `east` and `down` are separate numerical variables. Each update is
-written explicitly, for example `u = u + DT*u_dot`. Lists accumulate values
-for plotting. The default `DT = 0.001` s is smaller than the earlier RK4
-version's 0.01 s because forward Euler is less accurate at the same timestep.
-Tests check convergence when this timestep is halved.
+`calculate_rates()` evaluates aerodynamic forces, moments and the 12 state
+rates. `main()` initializes trim, advances the state using forward Euler,
+records the time history and computes the trim-speed comparison. The state is
+`[u, v, w, p, q, r, roll, pitch, yaw, north, east, down]`. Body axes are forward,
+right and down. Angles are radians internally; control inputs are degrees.
 
-## Outputs
+| Parameter | Value |
+| --- | --- |
+| Mass | 1043 kg |
+| Principal inertias Ixx, Iyy, Izz | 1285, 1825, 2667 kg m2 |
+| Wing area, span, chord | 174 ft2, 35.8 ft, 4.9 ft |
+| Trim sweep | 40-125 kt, 1 kt spacing, sea-level density |
+| Trim condition | Straight, level, zero bank/sideslip/angular rates; neutral aileron and rudder |
+| Initial response | First feasible attached-state trim at 100 kt |
+| Elevator input | Additional -1 deg from 2 to 3 s; trim throttle held fixed |
+| Duration and timestep | 15 s; 0.001 s |
+| Initial position and heading | Zero in local North-East-Down coordinates |
 
-- `results/trim_comparison.csv`: original DATCOM/AVL and PDF-model equilibria, including infeasible cases.
-- `results/time_response.csv`: all 12 states of the new model versus time.
-- `results/research_results.pdf`: three pages: trim elevator, trim alpha/throttle, and time response.
-- The same three figures are also saved as PNGs.
+Each comparison model starts at its own trim and uses the same pulse and timestep.
 
-The time-response figure also runs the original models for comparison.
-It starts each model at its own 100 kt trim and applies an additional -1 deg
-elevator from 2 to 3 seconds. All three now use the same forward-Euler timestep.
+## Aerodynamic data and CG
 
-## Physical assumptions
+The coefficient tables, geometry and force/moment derivatives are transcribed
+from `reference/aerodynamics.pdf`. Source provenance is recorded in
+[reference/SOURCES.md](reference/SOURCES.md).
 
-The aerodynamic source is `reference/aerodynamics.pdf`. Its zero-flap lift/drag
-tables and force/moment derivatives are retained, including alpha-rate terms.
-Propwash and wake corrections are disabled as requested. No JSBSim or live AVL
-process is called.
+The fixed reference CG is (41, 0, 36.5) inches, taken from the saved JSBSim
+`reference/c172p.xml` mass-balance block. This is the empty-aircraft reference
+CG. The retained comparison mass and inertias do not represent either the XML
+empty-aircraft or default loaded configuration. Pilot and fuel loading are not
+used to compute a loaded CG.
 
-The fixed reference CG is (41, 0, 36.5) inches from the saved JSBSim
-`reference/c172p.xml` mass-balance block. This is the **empty-aircraft reference
-CG**, not the loaded CG after adding its pilot and fuel. The comparison retains
-the original mass (1043 kg) and inertias; it does not reproduce the XML's empty
-or default loaded mass condition. No loaded-CG calculation is claimed.
+The aerodynamic reference is (43.8, 0, 58.7) inches, as specified on page 2 of
+the aerodynamic reference document. Structural axes are x aft, y right, z up.
+The CG-to-reference arm in body axes is (-0.07112, 0, -0.56388) m. Trim and
+all-axis dynamics use `moment_CG = moment_reference + arm cross force`.
 
-The aerodynamic reference stays (43.8, 0, 58.7) inches as specified on PDF page 2.
-Both use structural x aft, y right, z up; the CG-to-reference body-axis arm is
-(-0.07112, 0, -0.56388) metres. Aerodynamic moments are transferred with
-`moment_CG = moment_reference + arm cross force` in all three axes, in trim and
-time stepping. The current upstream XML has a different aerodynamic reference
-(43.2, 0, 59.4) inches; its coefficients/reference are not substituted for the
-PDF's. Pairing the external reference CG with the PDF is a fixed-CG comparison
-configuration, not evidence that both describe the identical loaded aircraft.
-The AVL folders retain their own CG and datum; their coordinates are not mixed
-with the PDF model.
+The saved XML has a different aerodynamic reference, (43.2, 0, 59.4) inches.
+The document's reference remains paired with its aerodynamic coefficients.
+Combining the external reference CG with those coefficients defines a fixed-CG
+comparison configuration, not a reconstruction of a verified aircraft loading.
+AVL-stage coordinates use their own datum and are separate from this model.
 
-Mass, inertias, atmosphere and propeller remain from the original comparison.
-Thrust still acts through the CG in this benchmark. See `ASSUMPTION_AUDIT.md`
-for the remaining limitations. See `reference/SOURCES.md` for provenance.
+## Assumptions and limitations
 
-Stall memory sets above 0.36 rad, resets below 0.09 rad, and otherwise holds.
-The 0.28-rad lift maximum is not substituted for the switching threshold.
-This rule follows [FGAerodynamics.cpp](https://github.com/JSBSim-Team/jsbsim/blob/master/src/models/FGAerodynamics.cpp).
-Tables hold their endpoint values, as in JSBSim's table lookup.
+- Mass, diagonal inertias and CG are constant. Products of inertia, fuel burn,
+  moving loads and structural flexibility are omitted.
+- The baseline 75-inch propeller uses a fixed 2400 rpm and linear throttle
+  scaling. Thrust acts along body x through the CG. Engine dynamics, torque,
+  gyroscopic effects and P-factor are omitted. Thrust is zero outside the
+  advance-ratio table; negative tabulated thrust coefficients remain possible.
+- Propwash and wake corrections are disabled. The listed force/moment
+  derivatives, including alpha-rate terms, are retained.
+- Clean, zero-flap, free-air aerodynamics are used. Ground-effect multipliers
+  equal one. No additional Mach or Reynolds-number corrections are applied.
+- Density follows `1.225*exp(-max(altitude, 0)/8500)` kg/m3. Gravity is
+  9.81 m/s2; the Earth is flat and nonrotating. Wind, gusts and ground contact
+  are omitted. Initial zero altitude is a coordinate/density datum.
+- Tables use linear interpolation and endpoint holding. Different tables
+  cover different alpha ranges; a lift-table state can already use held drag
+  or lateral-rate coefficients. Table bounds are not flight-envelope limits.
+- The lift table uses body alpha without a separate 1.5 deg incidence offset.
+  Side force is treated in wind axes with an orthogonal wind-to-body rotation;
+  the reference document's force-frame descriptions require clarification.
+- Alpha-rate lift feedback is solved algebraically using same-step
+  accelerations. No filtered or previous-step alpha-rate estimate is used.
+- Stall memory sets above 0.36 rad, resets below 0.09 rad and holds between
+  these values, following [JSBSim stall-state logic](https://github.com/JSBSim-Team/jsbsim/blob/master/src/models/FGAerodynamics.cpp).
+  The state initially is attached. Branch switches are instantaneous; no
+  separation time constant is modelled. Trim branches are independently seeded
+  equilibria and do not establish a reachable acceleration/deceleration path.
+- The attached-branch search extends beyond its 0.28 rad lift peak to the table
+  endpoint. No numerical post-stall roll-damping replacement is supplied, so
+  the attached-flow damping value remains. Spin behaviour is not established.
+- The trim scan identifies bracketed roots; tangent or closely spaced roots
+  can be missed. Root tolerances are 1e-8 N for endpoint balance and 1e-7 rad
+  for deduplication. No stability classification is performed.
+- Euler-angle integration stops below 1 m/s, at nonpositive forward velocity,
+  or when `abs(cos(pitch)) < 0.1`. Fixed timesteps must divide the pulse edges
+  and duration. Timestep convergence checks numerical accuracy, not aerodynamic
+  validity.
+- The baseline comparison includes its own 0.029 AVL parasite-drag correction,
+  substituted rate/control derivatives and `Cm0 + Cm_alpha(alpha)*alpha`
+  construction. Its interpolation/extrapolation differs from the nonlinear
+  tables. Agreement with the baseline is not experimental validation.
 
-There is no separate imposed-alpha experiment in `main()`. Stall memory is
-still updated from the actual aircraft alpha during the time loop. The
-time-response plot comes from the 6DOF integration. Trim roots are equilibria, not proof of
-stability; roots requiring more than full throttle are not plotted as feasible.
-The PDF gives no numerical post-stall roll-damping replacement, so none is
-invented. Spin remains deferred as Ranjith requested.
+## Outputs and checks
 
-## Checks
+- `results/trim_comparison.csv`: all trim roots, feasibility and unavailable cases.
+- `results/time_response.csv`: the 12 integrated states and stall memory.
+- `results/research_results.pdf`: trim elevator, trim alpha/throttle and time response.
+- PNG copies of the three report figures.
 
 ```powershell
 python tests/test_nonlinear_6dof.py
 ```
 
-The tests are separate from the script. They check tables, all-axis equations,
-trim balance, multiple roots, stall entry/recovery, trim drift and timestep
-convergence. The original model and the two standalone AVL folders are unchanged.
+Checks cover source-table transcription, the retained propeller table, all-axis
+CG transfer, feasible trim balance, multiple roots, unforced trim drift, stall
+entry/recovery and timestep convergence. Stall memory evolves from the aircraft
+state in the time loop; no separate imposed-alpha plotting experiment is run.

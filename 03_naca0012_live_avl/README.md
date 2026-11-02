@@ -1,23 +1,22 @@
 # NACA 0012 standalone AVL program
 
-This folder is independent of the older flight model. Read `solve.py`, starting
-at its `main()` function. It reads the separate geometry and mass files in
-`inputs/` and calls `run_avl.py` for each operating point. No inputs are built
+This stage performs standalone aerodynamic calculations. `solve.py` reads the
+separate geometry and mass files in `inputs/` and calls `run_avl.py` for each operating point. No inputs are built
 or overwritten during a run.
 
 ## Run
 
-In a terminal inside this folder, using your Python installation:
+Commands run from this folder:
 
 ```powershell
 python -m pip install -r requirements.txt
 python solve.py
 ```
 
-For just one point, run `python run_avl.py --alpha 4`. Use `--geometry` and
-`--mass` to select another existing pair in the same folder.
-The supplied `avl.exe` is the Windows executable. On another OS, replace it
-with a compatible binary and update `AVL_EXE` in `run_avl.py`.
+Single-point calculation: `python run_avl.py --alpha 4`. The `--geometry` and
+`--mass` options select an alternative input pair in the same folder.
+The supplied `avl.exe` is the Windows executable. Other operating systems
+require a compatible binary configured through `AVL_EXE` in `run_avl.py`.
 
 ## What the loop does
 
@@ -28,8 +27,8 @@ and the eight exact experimental angles. The numbers are compared with the
 80 grit Ladson data at Mach 0.15 and Reynolds number 6 million.
 
 Settings are visible at the top of `solve.py`: `ASPECT_RATIOS`, `ANGLES`,
-and `INPUT_FOLDER`. Edit panel counts directly in each `.avl` file.
-Keep AR 1000 for the near-2D comparison. The supplied mass file contains an artificial 1 kg mass at the quarter chord,
+and `INPUT_FOLDER`. Panel counts are defined in each `.avl` file.
+AR 1000 provides the near-2D comparison. The supplied mass file contains an artificial 1 kg mass at the quarter chord,
 with illustrative positive inertias. This is not measured airfoil mass data.
 It preserves the moment reference while showing how a mass file is loaded.
 

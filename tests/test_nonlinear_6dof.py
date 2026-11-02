@@ -1,4 +1,4 @@
-"""Checks kept outside the beginner aircraft script. Run this file directly."""
+"""Regression checks for the nonlinear C172 model."""
 import ast
 import math
 from pathlib import Path
@@ -23,7 +23,7 @@ def trim_state(speed, branch=0):
 
 
 def run_test_steps(state, elevator, throttle, seconds, dt, pulse=False):
-    # The same explicit forward-Euler operation as the beginner script.
+    # The same explicit forward-Euler operation as the simulation.
     state = state[:]
     stalled = model.stall_state(math.atan2(state[2], state[0]), 0)
     history = [(0, state[:], stalled)]
@@ -40,14 +40,14 @@ def run_test_steps(state, elevator, throttle, seconds, dt, pulse=False):
     return history
 
 
-class BeginnerModelChecks(unittest.TestCase):
+class NonlinearModelChecks(unittest.TestCase):
     def test_lift_tables_match_independent_transcription(self):
-        source = ast.parse((ROOT/'scripts/test_jsbsim_stall_table.py').read_text())
-        values = {}
-        for node in source.body:
-            if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name):
-                if node.targets[0].id in ('ALPHA_RAD', 'CL_ATTACHED', 'CL_STALLED'):
-                    values[node.targets[0].id] = ast.literal_eval(node.value)
+        # Independent transcription of the reference document, page 7.
+        values = {
+            'ALPHA_RAD': [-0.09, 0.0, 0.09, 0.1, 0.12, 0.14, 0.16, 0.17, 0.19, 0.21, 0.24, 0.26, 0.28, 0.3, 0.32, 0.34, 0.36],
+            'CL_ATTACHED': [-0.22, 0.25, 0.73, 0.83, 0.92, 1.02, 1.08, 1.13, 1.19, 1.25, 1.35, 1.44, 1.47, 1.43, 1.38, 1.3, 1.15],
+            'CL_STALLED': [-0.22, 0.25, 0.73, 0.78, 0.79, 0.81, 0.82, 0.83, 0.85, 0.86, 0.88, 0.9, 0.92, 0.95, 0.99, 1.05, 1.15],
+        }
         self.assertEqual(model.ALPHA, values['ALPHA_RAD'])
         self.assertEqual(model.CL_ATTACHED, values['CL_ATTACHED'])
         self.assertEqual(model.CL_STALLED, values['CL_STALLED'])

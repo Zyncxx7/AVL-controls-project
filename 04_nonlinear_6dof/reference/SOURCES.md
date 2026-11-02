@@ -1,6 +1,6 @@
 # Model sources
 
-- `aerodynamics.pdf`: attachment from Ranjith, retained without edits. The
+- `aerodynamics.pdf`: C172P aerodynamic reference document. The
   aerodynamic geometry, reference point (page 2), tables and derivatives come
   from this document.
 - `c172p.xml`: retrieved 2026-11-02 from

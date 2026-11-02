@@ -19,7 +19,7 @@ C = 1.49                 # mean chord, m
 IXX, IYY, IZZ = 1285.0, 1825.0, 2667.0
 DEG = pi / 180.0
 
-# AVL and DATCOM values from the PDF you supplied.
+# AVL and DATCOM coefficient values from the aerodynamic reference data.
 # They are listed here so this script can run by itself.
 ANGLES_DEG = [-2.5, 0.0, 5.0, 10.0]
 TABLES = {

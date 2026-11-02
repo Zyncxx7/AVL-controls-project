@@ -1,15 +1,14 @@
 # C172 standalone AVL program
 
-This folder is independent of the older flight model. Its input files and two Python scripts
-are intended to be read in this order:
+This stage performs standalone aerodynamic calculations. The workflow is:
 
-1. `solve.py`: start at `main()` and follow its numbered steps.
-2. `inputs/cessna.avl` and `inputs/cessna.mass`: edit geometry and mass directly.
-3. `run_avl.py`: see the exact commands sent to the external AVL executable.
+1. `solve.py` defines the angle sweep and comparisons.
+2. `inputs/cessna.avl` and `inputs/cessna.mass` define geometry and mass properties.
+3. `run_avl.py` sends commands to the external AVL executable.
 
 ## Run
 
-In a terminal inside this folder, using your Python installation:
+Commands run from this folder:
 
 ```powershell
 python -m pip install -r requirements.txt
@@ -22,19 +21,19 @@ For one point instead of the whole loop:
 python run_avl.py --alpha 5
 ```
 
-The supplied `avl.exe` is Windows AVL 3.52. On another OS, use the appropriate
-AVL binary and change `AVL_EXE` at the top of `run_avl.py`.
+The supplied `avl.exe` is Windows AVL 3.52. Other operating systems
+require a compatible binary configured through `AVL_EXE` in `run_avl.py`.
 
-## What to change
+## Configuration
 
-Edit `START_ANGLE_DEG`, `END_ANGLE_DEG` and `ANGLE_STEP_DEG` at the top of `solve.py`.
+`START_ANGLE_DEG`, `END_ANGLE_DEG` and `ANGLE_STEP_DEG` define the sweep.
 The default sweep is -2.5 to 10 degrees in 0.25-degree increments. The four
 original angles are always included so reference reproduction can be checked.
 
 Geometry, mass, CG and inertia settings are in the separate files under `inputs/`.
 Neither `solve.py` nor `run_avl.py` builds or overwrites those inputs.
-The mass file is actually loaded, but its values are teaching-model assumptions,
-not a measured mass distribution. The original geometry has no elevator
+The mass file is loaded explicitly. Its values are illustrative rather than
+measured mass properties. The original geometry has no elevator
 CONTROL definitions. This program therefore does not claim elevator derivatives.
 
 ## Outputs and comparison
@@ -49,9 +48,9 @@ CONTROL definitions. This program therefore does not claim elevator derivatives.
 The `REFERENCE_RESULTS` table in `solve.py` was transcribed from the four C172 AVL stability
 runs at Mach 0.16. It tests reproducibility, not accuracy against flight tests.
 No external reference CSV is needed. Runtime inputs are `avl.exe`, `inputs/cessna.avl` and `inputs/cessna.mass`.
-To use another existing pair, run `python run_avl.py --geometry path/to/model.avl
---mass path/to/model.mass --alpha 5` on one line. Keep the pair in one folder.
-CD is the raw AVL drag, without the older model's 0.029 parasite correction.
+Alternative geometry and mass pairs can be selected with `--geometry` and
+`--mass`; both files must share a folder.
+CD is the raw AVL drag, without the baseline model's 0.029 parasite correction.
 Cm is the total moment at each angle; Cm_alpha is a derivative, not another
 moment contribution to add to that total.
 

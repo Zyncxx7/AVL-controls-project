@@ -1,8 +1,7 @@
-"""C172: a time-stepped response and trim-versus-speed comparison.
+"""C172 nonlinear trim and time-domain response.
 
-Everything for the new aircraft model is in this file.
-Read the settings and tables, then main() at the bottom.
-The original model is imported only to draw the comparison curves.
+Aerodynamics are evaluated from reference tables and derivatives.
+The stage 1 model provides baseline comparison curves.
 """
 from math import asin, atan2, cos, exp, isfinite, pi, sin, sqrt, tan
 from pathlib import Path
@@ -40,7 +39,7 @@ CG_X = 41.0 * 0.0254
 CG_Y = 0.0
 CG_Z = 36.5 * 0.0254
 
-# Aerodynamic moment reference from Ranjith's PDF, page 2, same structural axes.
+# Aerodynamic moment reference from the aerodynamic reference document, page 2, same structural axes.
 # Keep the PDF reference with its coefficients. Upstream XML uses a different RP.
 AERO_X = 43.8 * 0.0254
 AERO_Y = 0.0
@@ -147,7 +146,7 @@ def trim_balance(speed_kt, alpha, stalled):
     elevator_drag_pitch = drag_arm*CD_DE
 
     # Elevator drag contains abs(elevator), so check its two linear cases.
-    # No quadratic, wake model, guessed elevator limit or root choice is used.
+    # Both sign cases are checked for a unique moment-balance solution.
     elevator = None
     positive_slope = elevator_pitch + elevator_drag_pitch
     if positive_slope != 0:
@@ -375,7 +374,7 @@ def main():
         raise ValueError("DT must be positive.")
     for boundary in (SECONDS, PULSE_START, PULSE_END):
         if abs(boundary/DT - round(boundary/DT)) > 1e-7:
-            raise ValueError("Choose DT that divides the duration and pulse times exactly.")
+            raise ValueError("DT must divide the duration and pulse times exactly.")
 
     # 2. STEP THE AIRCRAFT THROUGH TIME AND SAVE ITS RESPONSE.
     with (results / "time_response.csv").open("w", newline="") as file:
@@ -489,7 +488,7 @@ def main():
     if no_plots:
         return
 
-    # 4. PLOTS. Ordinary Matplotlib statements; no custom plotting framework.
+    # 4. SAVE COMPARISON FIGURES AND REPORT.
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt

@@ -3,3 +3,9 @@ __pycache__/
 .venv/
 .tools/
 output/releases/
+
+# Reproducible solver logs and local previews
+**/results/cases/
+output/verification/airfoil/
+output/verification/cessna/
+tmp/
