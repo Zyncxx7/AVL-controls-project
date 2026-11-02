@@ -1,0 +1,158 @@
+{
+  "requested_work": {
+    "trim_elevator_vs_speed": "implemented for original DATCOM, original AVL and PDF model",
+    "increasing_decreasing_stall_loop": "implemented with persistent memory, also used by 6DOF integration",
+    "spin_solution": "deferred as requested in the email; no spin solution claimed"
+  },
+  "setup": {
+    "mass_kg": 1043.0,
+    "inertia_kg_m2": [
+      1285.0,
+      1825.0,
+      2667.0
+    ],
+    "wing_area_m2": 16.16512896,
+    "span_m": 10.91184,
+    "chord_m": 1.4935200000000002,
+    "flaps_deg": 0,
+    "density_kg_m3": 1.225,
+    "ground_effect": false,
+    "speeds_kt": [
+      40,
+      125
+    ],
+    "speed_step_kt": 1,
+    "time_step_s": 0.01,
+    "response_duration_s": 15,
+    "response_trim_speed_kt": 100,
+    "pulse": {
+      "control": "elevator",
+      "size": -1.0,
+      "start": 2.0,
+      "end": 3.0
+    },
+    "hysteresis_reset_below_rad": 0.09,
+    "hysteresis_set_above_rad": 0.36
+  },
+  "trim_results": {
+    "Original DATCOM": {
+      "feasible_equilibria": 46,
+      "feasible_speed_range_kt": [
+        60,
+        105
+      ],
+      "at_100_kt": [
+        {
+          "model": "Original DATCOM",
+          "airspeed_kt": 100,
+          "forward_speed_kt": 99.90539035295676,
+          "alpha_deg": 2.492525371443481,
+          "elevator_deg": -1.3825394213715265,
+          "throttle": 0.8072427322294441,
+          "feasible": true,
+          "reason": ""
+        }
+      ]
+    },
+    "Original AVL": {
+      "feasible_equilibria": 36,
+      "feasible_speed_range_kt": [
+        68,
+        103
+      ],
+      "at_100_kt": [
+        {
+          "model": "Original AVL",
+          "airspeed_kt": 100,
+          "forward_speed_kt": 99.77700942285632,
+          "alpha_deg": 3.8270278441719725,
+          "elevator_deg": -3.3170961333676487,
+          "throttle": 0.8784807135371855,
+          "feasible": true,
+          "reason": ""
+        }
+      ]
+    },
+    "PDF attached": {
+      "feasible_equilibria": 61,
+      "feasible_speed_range_kt": [
+        52,
+        104
+      ],
+      "at_100_kt": [
+        {
+          "airspeed_kt": 100,
+          "forward_speed_kt": 99.97418844586097,
+          "alpha_rad": 0.02272120798256024,
+          "alpha_deg": 1.3018293228396576,
+          "hysteresis": 0,
+          "elevator_deg": 2.4456304064233527,
+          "throttle": 0.8234832285244306,
+          "force_residual_N": -1.8189894035458565e-12,
+          "max_acceleration_residual": 1.7763568394002505e-15,
+          "feasible": true,
+          "model": "PDF attached",
+          "root_index": 0,
+          "root_region": "pre-peak",
+          "reason": ""
+        }
+      ]
+    },
+    "PDF stalled": {
+      "feasible_equilibria": 11,
+      "feasible_speed_range_kt": [
+        60,
+        73
+      ],
+      "at_100_kt": []
+    }
+  },
+  "stall_cycle": {
+    "time_samples": 1645,
+    "max_alpha_rad": 0.361,
+    "switches": [
+      {
+        "time_s": 16.42,
+        "direction": "increasing",
+        "alpha_rad": 0.3605,
+        "alpha_deg": 20.655128514466178,
+        "hysteresis": 1,
+        "CL_wing": 1.15,
+        "CL_total": 1.1533870353235727,
+        "alpha_rate_rad_s": 0.024999999999999998,
+        "lift_N": 10880.254287550519,
+        "lift_table_endpoint_held": true,
+        "drag_table_endpoint_held": true
+      },
+      {
+        "time_s": 27.28,
+        "direction": "decreasing",
+        "alpha_rad": 0.08999999999999998,
+        "alpha_deg": 5.156620156177408,
+        "hysteresis": 0,
+        "CL_wing": 0.7299999999999999,
+        "CL_total": 0.7266129646764272,
+        "alpha_rate_rad_s": -0.024999999999999998,
+        "lift_N": 6854.363350887334,
+        "lift_table_endpoint_held": false,
+        "drag_table_endpoint_held": false
+      }
+    ],
+    "prescribed_alpha_not_free_flight": true
+  },
+  "time_response": {
+    "samples": 4503,
+    "finite_states": true
+  },
+  "source_pdf_sha256": "fa4443019c4049e962e7dfebb4994cc1f3c32605406b5e1e463b5184f9c07ee7",
+  "assumptions": [
+    "Common original mass, inertia, atmosphere, thrust model and propeller diameter retained.",
+    "Clean configuration in free air; altitude zero denotes sea-level density, not ground clearance.",
+    "PDF aerodynamic moments treated at the common CG; the PDF supplies no loading-dependent CG.",
+    "Tail induced velocity estimated using actuator-disk momentum theory and the common thrust model.",
+    "Tables use endpoint holding; held lift/drag samples are explicitly flagged in stall_cycle.csv.",
+    "No unspecified post-stall roll-damping reversal was invented.",
+    "Original comparison uses its existing Euler integrator; nonlinear model uses RK4.",
+    "Trim roots are equilibria, not a guarantee of stability or a realised deceleration trajectory."
+  ]
+}

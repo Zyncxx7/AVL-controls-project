@@ -1,12 +1,14 @@
 # AVL controls project
 
-The project is organized into three stages. Each stage can run independently.
+The project is organized into four stages. The nonlinear comparison in stage 4
+imports the original stage 1 model as its reference.
 
 | Stage | Folder | Purpose |
 | --- | --- | --- |
 | 1 | [01_simple_6dof](01_simple_6dof/) | C172 six degree of freedom model using tabulated aerodynamic coefficients |
 | 2 | [02_c172_live_avl](02_c172_live_avl/) | Fresh C172 AVL solutions at prescribed angles of attack |
 | 3 | [03_naca0012_live_avl](03_naca0012_live_avl/) | NACA 0012 wing calculations and experimental lift comparison |
+| 4 | [04_nonlinear_6dof](04_nonlinear_6dof/) | Original-versus-nonlinear trim elevator curves, stall hysteresis and time-stepped 6DOF responses |
 
 The standalone solvers call the bundled AVL executable for every operating
 point. They sweep angles of attack; they do not yet update the 6DOF simulation
@@ -22,6 +24,8 @@ python -m pip install -r 01_simple_6dof/requirements.txt
 python 01_simple_6dof/simple_c172_6dof.py
 python 02_c172_live_avl/solve.py
 python 03_naca0012_live_avl/solve.py
+python -m pip install -r 04_nonlinear_6dof/requirements.txt
+python 04_nonlinear_6dof/solve.py
 ```
 
 Each stage has its own README, requirements and results. Stage 1 opens plot
@@ -69,3 +73,19 @@ illustrative, rather than measured aircraft data.
 
 AVL is third-party GPL software. Solver READMEs identify its source and the
 comparison data sources.
+
+## Nonlinear model requested on 31 October
+
+Stage 4 uses the clean C172P aerodynamic parameters from the supplied PDF.
+Open [the comparison report](04_nonlinear_6dof/results/research_results.pdf)
+for trim elevator versus airspeed, additional trim parameters, the increasing
+and decreasing stall loop, and a time-stepped elevator-pulse response.
+Numeric results and reasons for unavailable trim points are in that folder's
+CSV and JSON files. The original model and the standalone AVL stages are
+preserved. The new nonlinear stage does not query AVL or invoke JSBSim.
+
+Run `python tests/test_nonlinear_6dof.py` for the nonlinear regression checks.
+The spin calculation is deferred, as requested after the trim and stall work.
+
+For a guided code reading order, start with
+[the nonlinear stage's reading guide](04_nonlinear_6dof/README.md#where-to-start-reading).

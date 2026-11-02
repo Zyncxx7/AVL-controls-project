@@ -82,7 +82,7 @@ if (-not $authorEmail) {
 Invoke-Git add --all
 & git -c "safe.directory=$gitSafeDirectory" -C $projectRoot diff --cached --quiet
 if ($LASTEXITCODE -eq 1) {
-    Invoke-Git commit -m 'Organize AVL controls project and verified standalone solvers'
+    Invoke-Git commit -m 'Add readable nonlinear 6DOF trim and stall comparisons'
 } elseif ($LASTEXITCODE -ne 0) { throw 'Unable to inspect staged changes.' }
 
 $remotes = @(Invoke-Git remote)
